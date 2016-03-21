@@ -1,0 +1,108 @@
+extends layout
+block content
+
+    div.top-content
+        div.inner-bg
+            div.container
+                div.row
+                    div.col-sm-8.col-sm-offset-2.text
+                        h1
+                            strong Secure Internet Portal
+
+                div.row
+                    div.col-sm-6.col-sm-offset-3.form-box
+                        div.form-top
+                            div.form-top-left
+                                h3 Login
+                                p Enter your username and password to log on:
+
+                            div.form-top-right
+                                img(src="/ico/aerohive_215.png")
+
+
+                        div.form-bottom
+                            form(name="weblogin" action="http://" + params.nasIpAddress + "/reg.php" id="logon" method="post")
+                                input(type="hidden" name="url" value=params.url)
+                                input(type="hidden" name="autherr" value="0")
+                                div.form-group
+                                    label.sr-only(for="form-username") Username
+                                    input.form-username.form-control(type="text" name="form-username" placeholder="Username..." id="username")
+                                div.form-group
+                                    label.sr-only(for="form-password") Password
+                                    input.form-password.form-control(type="password" name="form-password" placeholder="Password..." id="password")
+                                button.btn(type="submit") Sign in!
+
+                div.row
+                    div.col-sm-6.col-sm-offset-3.form-box
+                        input(type="hidden" id="vpcUrl" value=vpcUrl)
+                        input(type="hidden" id="ownerId" value=ownerId)
+                        input(type="hidden" id="accessToken" value=accessToken)
+                        div.form-top
+                            div.form-top-left
+                                h3 ...or get a login
+                                p enter your email address or your phone number to get a new login:
+                            div.form-top-right
+                                img(src="/ico/aerohive_215.png")
+                        div.form-bottom
+
+                            if groups.userGroups.length == 1
+                                input(type="hidden" id="groupId" value=groups.userGroupps[0].id)
+                            else
+                                div.form-group
+                                    select(id="groupId")
+                                        option(selected="") Please choose a user group
+                                        each group in groups.userGroups
+                                            option(value=group.id)= group.name
+                            div.form-group
+                                label(for="form-username") Email Address:
+                                input.form-username.form-control(type="text" name="form-email" placeholder="example@domain.com" id="form-email")
+                            div.form-group
+                                label(for="form-phone") Phone Number:
+                                br
+                                input.form-username.form-control(type="text" name="form-phone" id="form-phone")
+                            button.btn(onclick="createAccount()") Get your login!
+
+
+
+    script.
+        $("#form-phone").intlTelInput({
+            preferredCountries: ["fr"],
+            utilsScript: "/js/utils.js"
+        });
+
+        function createAccount() {
+            var ownerId = $("#ownerId").val();
+            var accessToken = $("#accessToken").val();
+            var vpcUrl = $("#vpcUrl").val();
+            var formPhone = $("#form-phone");
+            var formEmail = $("#form-email");
+            var phone = formPhone.val();
+            var email = formEmail.val();
+            formEmail.removeClass("input-error");
+            formEmail.removeClass("input-error");
+            var errorPhone = formPhone.intlTelInput("getValidationError");
+            var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+            var groupId = $("#groupId option:selected").val();
+
+            if (email !== "" && !re.test(email)) {
+                formEmail.addClass("input-error");
+            } else if (phone !== "" && errorPhone !== 0) {
+                formPhone.addClass("input-error");
+            } else if (email === "" && phone === "") {
+                formEmail.addClass("input-error");
+                formPhone.addClass("input-error");
+            }
+            if (!(formEmail.hasClass("input-error") || formPhone.hasClass("input-error"))) {
+                var phone = formPhone.intlTelInput("getNumber");
+                $.ajax({
+                    method: "POST",
+                    url: "/api",
+                    data: {email: email, phone: phone, groupId: groupId, ownerId: ownerId, accessToken: accessToken, vpcUrl: vpcUrl}
+                })
+                        .done(function (response) {
+                            if (response.error) console.log(response.error);
+                            else console.log(response);
+                        });
+            }
+
+        }
