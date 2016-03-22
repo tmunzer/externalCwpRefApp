@@ -37,6 +37,8 @@ function checkURI(req, next){
 
 router.get('/:vpcUrl/:ownerId/:accessToken/', function (req, res, next) {
     var vpcUrl = "cloud-va.aerohive.com";
+    //var accessToken = "GUoGTDTKXUyDlFpGwhX5bvFLF9aHCao52ce737d8";
+    //var ownerId = "1198";
     if (req.params.vpcUrl === "1") vpcUrl = "cloud-ie.aerohive.com";
 
     if (req.query.hasOwnProperty('Calling-Station-Id') &&
