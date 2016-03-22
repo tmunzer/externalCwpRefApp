@@ -1,5 +1,14 @@
 extends layout
 block content
+    div.modal(tabindex="-1" id="myModal" role="dialog")
+        div.modal-dialog
+            div.modal-content
+                div.modal-header
+                    h4.modal-title(id="modalTitle")
+                div.modal-body(id="modalBody")
+                div.modal-footer
+                    button.btn.btn-default(type="button" data-dismiss="modal" id="modalClose") Close
+                    button.btn.btn-primary(type="button" onclick='resendCredentials()' id="modalResend") Resend Credentials
 
     div.top-content
         div.inner-bg
@@ -65,15 +74,48 @@ block content
 
 
     script.
+        var ownerId = $("#ownerId").val();
+        var accessToken = $("#accessToken").val();
+        var vpcUrl = $("#vpcUrl").val();
+
+        var modalTitle = $('#modalTitle');
+        var modalBody = $('#modalBody');
+        var modalClose =$("#modalClose");
+        var modalResend =$("#modalResend");
+        var myModal = $("#myModal");
+
         $("#form-phone").intlTelInput({
             preferredCountries: ["fr"],
             utilsScript: "/js/utils.js"
         });
 
+
+        function resendCredentials(){
+            var credential = modalResend.data("credential");
+            myModal.modal("hide");
+            modalTitle.text("Please wait...");
+            modalBody.html("<p>We are sending your credentials to "+credential+".</p>");
+            modalClose.hide();
+            modalResend.hide();
+            myModal.modal("show");
+            $.ajax({
+                method: "POST",
+                url: "/api/resendCredentials",
+                data: {credential: credential, ownerId: ownerId, accessToken: accessToken, vpcUrl: vpcUrl}
+            }).done(function (response) {
+                if (response === null){
+                    myModal.modal("hide");
+                    modalTitle.text("Deliver Credentials");
+                    modalBody.html("<p>Your credentials were sent to " + credential + ".</p>");
+                    modalClose.show();
+                    modalResend.hide();
+                    myModal.modal("show");
+                }
+            });
+        }
+
         function createAccount() {
-            var ownerId = $("#ownerId").val();
-            var accessToken = $("#accessToken").val();
-            var vpcUrl = $("#vpcUrl").val();
+
             var formPhone = $("#form-phone");
             var formEmail = $("#form-email");
             var phone = formPhone.val();
@@ -94,14 +136,30 @@ block content
             }
             if (!(formEmail.hasClass("input-error") || formPhone.hasClass("input-error"))) {
                 var phone = formPhone.intlTelInput("getNumber");
+                modalTitle.text("Please wait...");
+                modalBody.html("<p>We are creating your account.</p>");
+                modalClose.hide();
+                modalResend.hide();
+                myModal.modal("show");
                 $.ajax({
                     method: "POST",
                     url: "/api",
                     data: {email: email, phone: phone, groupId: groupId, ownerId: ownerId, accessToken: accessToken, vpcUrl: vpcUrl}
                 })
                         .done(function (response) {
-                            if (response.error) console.log(response.error);
-                            else console.log(response);
+
+                                console.log(response);
+                                if (response.status === 403) {
+                                    myModal.modal("hide");
+                                    modalTitle.text("Error while creating the account");
+                                    modalBody.html("<p>"+response.message+"</p>");
+                                    modalClose.show();
+                                    modalResend.show();
+                                    myModal.modal("show");
+                                    var credential = response.errorParams.item.split('(')[1].split(')')[0];
+                                    modalResend.data("credential", credential);
+                                }
+
                         });
             }
 

@@ -60,3 +60,21 @@ module.exports.DELETE = function (vpcUrl, accessToken, ownerID, memberOf, adUser
         }
     })
 };
+
+module.exports.DELIVER = function (vpcUrl, accessToken, ownerID, memberOf, adUser, hmCredentialDeliveryInfoVo, callback) {
+    var path = "/xapi/v1/identity/credentials/deliver?ownerId=" + ownerID;
+    if (memberOf && memberOf!="") path += '&memberOf=' + memberOf;
+    if (adUser && adUser!="") path += '&adUser=' + adUser;
+    for (var key in hmCredentialDeliveryInfoVo) {
+        if (hmCredentialDeliveryInfoVo[key] === '') delete hmCredentialDeliveryInfoVo[key];
+    }
+    api.POST(vpcUrl, accessToken, path, hmCredentialDeliveryInfoVo, function (err, result) {
+        if (err) {
+            callback(err, null);
+        } else if (result) {
+            callback(null, result);
+        } else {
+            callback(null, null);
+        }
+    })
+};
