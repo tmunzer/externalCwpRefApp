@@ -55,7 +55,8 @@ block content
                         div.form-bottom
 
                             if groups.userGroups.length == 1
-                                input(type="hidden" id="groupId" value=groups.userGroupps[0].id)
+                                each group in groups.userGroups
+                                    input(type="hidden" id="groupId" value=group.id)
                             else
                                 div.form-group
                                     select(id="groupId")
@@ -158,6 +159,13 @@ block content
                                     myModal.modal("show");
                                     var credential = response.errorParams.item.split('(')[1].split(')')[0];
                                     modalResend.data("credential", credential);
+                                } else if (response.id) {
+                                    myModal.modal("hide");
+                                    modalTitle.text("Acocunt created!");
+                                    modalBody.html("<p>We are sending your credentials to " + response.loginName + "</p>");
+                                    modalClose.show();
+                                    modalResend.hide();
+                                    myModal.modal("show");
                                 }
 
                         });
