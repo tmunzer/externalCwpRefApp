@@ -55,8 +55,9 @@ block content
                         div.form-bottom
 
                             if groups.userGroups.length == 1
-                                each group in groups.userGroups
-                                    input(type="hidden" id="groupId" value=group.id)
+                                select(id="groupId" style="display:none;")
+                                    each group in groups.userGroups
+                                        option(value=group.id selected="")= group.name
                             else
                                 div.form-group
                                     select(id="groupId")
